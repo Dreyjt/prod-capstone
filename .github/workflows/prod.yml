@@ -48,7 +48,7 @@ jobs:
         id: extract
         run: |
           BRANCH="${{ github.ref_name }}"
-          ID=$(echo "$BRANCH" | grep -o 'TRELLO-[0-9]*')
+          ID=$(echo "$BRANCH" | grep -o 'TRELLO-[0-9]*' || true)
 
           if [ -z "$ID" ]; then
             echo "No Trello ID found in branch, skipping..."
@@ -63,10 +63,16 @@ jobs:
         run: |
           RESPONSE=$(curl -s "https://api.trello.com/1/search?query=${{ steps.extract.outputs.id }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}")
           CARD_ID=$(echo $RESPONSE | jq -r '.cards[0].id')
+
+          if [ "$CARD_ID" = "null" ] || [ -z "$CARD_ID" ]; then
+            echo "No matching Trello card found, skipping..."
+            exit 0
+          fi
+
           echo "card_id=$CARD_ID" >> $GITHUB_OUTPUT
 
       - name: Move Card to In Progress
-        if: steps.extract.outputs.id != ''
+        if: steps.extract.outputs.id != '' && steps.find.outputs.card_id != ''
         run: |
           curl -X PUT "https://api.trello.com/1/cards/${{ steps.find.outputs.card_id }}?idList=${{ secrets.INPROGRESS_LIST_ID }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}"
 
@@ -82,7 +88,7 @@ jobs:
         id: extract
         run: |
           BRANCH="${{ github.head_ref }}"
-          ID=$(echo "$BRANCH" | grep -o 'TRELLO-[0-9]*')
+          ID=$(echo "$BRANCH" | grep -o 'TRELLO-[0-9]*' || true)
 
           if [ -z "$ID" ]; then
             echo "No Trello ID found in branch, skipping..."
@@ -97,10 +103,16 @@ jobs:
         run: |
           RESPONSE=$(curl -s "https://api.trello.com/1/search?query=${{ steps.extract.outputs.id }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}")
           CARD_ID=$(echo $RESPONSE | jq -r '.cards[0].id')
+
+          if [ "$CARD_ID" = "null" ] || [ -z "$CARD_ID" ]; then
+            echo "No matching Trello card found, skipping..."
+            exit 0
+          fi
+
           echo "card_id=$CARD_ID" >> $GITHUB_OUTPUT
 
       - name: Move Card (Review or Done)
-        if: steps.extract.outputs.id != ''
+        if: steps.extract.outputs.id != '' && steps.find.outputs.card_id != ''
         run: |
           if [[ "${{ github.event.action }}" == "opened" ]]; then
             LIST_ID="${{ secrets.REVIEW_LIST_ID }}"
