@@ -34,3 +34,76 @@ jobs:
       - name: Run Tests
         run: |
           pytest test_app.py -v
+
+
+  # -------------------------
+  # 2. MOVE TO IN PROGRESS (on push)
+  # -------------------------
+  move-to-progress:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract Trello ID from branch
+        id: extract
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          ID=$(echo "$BRANCH" | grep -o 'TRELLO-[0-9]*')
+
+          if [ -z "$ID" ]; then
+            echo "No Trello ID found in branch"
+            exit 1
+          fi
+
+          echo "id=$ID" >> $GITHUB_OUTPUT
+
+      - name: Find Trello Card
+        id: find
+        run: |
+          RESPONSE=$(curl -s "https://api.trello.com/1/search?query=${{ steps.extract.outputs.id }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}")
+          CARD_ID=$(echo $RESPONSE | jq -r '.cards[0].id')
+          echo "card_id=$CARD_ID" >> $GITHUB_OUTPUT
+
+      - name: Move Card to In Progress
+        run: |
+          curl -X PUT "https://api.trello.com/1/cards/${{ steps.find.outputs.card_id }}?idList=${{ secrets.INPROGRESS_LIST_ID }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}"
+
+  # -------------------------
+  # 3. MOVE TO REVIEW / DONE
+  # -------------------------
+  trello:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract Trello ID from branch
+        id: extract
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          ID=$(echo "$BRANCH" | grep -o 'TRELLO-[0-9]*')
+
+          if [ -z "$ID" ]; then
+            echo "No Trello ID found in branch"
+            exit 1
+          fi
+
+          echo "id=$ID" >> $GITHUB_OUTPUT
+
+      - name: Find Trello Card
+        id: find
+        run: |
+          RESPONSE=$(curl -s "https://api.trello.com/1/search?query=${{ steps.extract.outputs.id }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}")
+          CARD_ID=$(echo $RESPONSE | jq -r '.cards[0].id')
+          echo "card_id=$CARD_ID" >> $GITHUB_OUTPUT
+
+      - name: Move Card (Review or Done)
+        run: |
+          if [[ "${{ github.event.action }}" == "opened" ]]; then
+            LIST_ID="${{ secrets.REVIEW_LIST_ID }}"
+          elif [[ "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            LIST_ID="${{ secrets.DONE_LIST_ID }}"
+          else
+            exit 0
+          fi
+
+          curl -X PUT "https://api.trello.com/1/cards/${{ steps.find.outputs.card_id }}?idList=$LIST_ID&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}"
