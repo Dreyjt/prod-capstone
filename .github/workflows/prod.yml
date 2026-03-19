@@ -58,6 +58,7 @@ jobs:
           echo "id=$ID" >> $GITHUB_OUTPUT
 
       - name: Find Trello Card
+        if: steps.extract.outputs.id != ''
         id: find
         run: |
           RESPONSE=$(curl -s "https://api.trello.com/1/search?query=${{ steps.extract.outputs.id }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}")
@@ -65,6 +66,7 @@ jobs:
           echo "card_id=$CARD_ID" >> $GITHUB_OUTPUT
 
       - name: Move Card to In Progress
+        if: steps.extract.outputs.id != ''
         run: |
           curl -X PUT "https://api.trello.com/1/cards/${{ steps.find.outputs.card_id }}?idList=${{ secrets.INPROGRESS_LIST_ID }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}"
 
@@ -90,6 +92,7 @@ jobs:
           echo "id=$ID" >> $GITHUB_OUTPUT
 
       - name: Find Trello Card
+        if: steps.extract.outputs.id != ''
         id: find
         run: |
           RESPONSE=$(curl -s "https://api.trello.com/1/search?query=${{ steps.extract.outputs.id }}&key=${{ secrets.TRELLO_KEY }}&token=${{ secrets.TRELLO_TOKEN }}")
@@ -97,6 +100,7 @@ jobs:
           echo "card_id=$CARD_ID" >> $GITHUB_OUTPUT
 
       - name: Move Card (Review or Done)
+        if: steps.extract.outputs.id != ''
         run: |
           if [[ "${{ github.event.action }}" == "opened" ]]; then
             LIST_ID="${{ secrets.REVIEW_LIST_ID }}"
