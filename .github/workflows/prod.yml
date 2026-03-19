@@ -51,8 +51,8 @@ jobs:
           ID=$(echo "$BRANCH" | grep -o 'TRELLO-[0-9]*')
 
           if [ -z "$ID" ]; then
-            echo "No Trello ID found in branch"
-            exit 1
+            echo "No Trello ID found in branch, skipping..."
+            exit 0
           fi
 
           echo "id=$ID" >> $GITHUB_OUTPUT
@@ -83,8 +83,8 @@ jobs:
           ID=$(echo "$BRANCH" | grep -o 'TRELLO-[0-9]*')
 
           if [ -z "$ID" ]; then
-            echo "No Trello ID found in branch"
-            exit 1
+            echo "No Trello ID found in branch, skipping..."
+            exit 0
           fi
 
           echo "id=$ID" >> $GITHUB_OUTPUT
