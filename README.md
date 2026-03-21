@@ -28,13 +28,14 @@ Workflow Description
 
 1.	Create a Trello card (Backlog)
 2.	Create a feature branch linked to the card
-3.	Move card to In Progress
-4.	Commit changes incrementally
-5.	Push branch and create PR
+3.	Commit changes incrementally
+4.	Push branch and create PR
+5.  Card moves to In progress
 6.	CI runs automatically (lint + tests)
-7.	Card moves to Review/QA
-8.	Merge PR after checks pass
-9.	Card moves to Done
+7.  Open PR 
+8.	Card moves to Review/QA
+9.	Merge PR after checks pass
+10.	Card moves to Done
 ________________________________________
 
 Commit Conventions
