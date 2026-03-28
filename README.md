@@ -77,4 +77,3 @@ This approach isolates work, improves traceability, and simplifies debugging. Ea
 Automation removes manual overhead, ensures consistency, and keeps task tracking aligned with actual development progress.
 5. Challenges faced
 The main challenge was integrating Trello API with GitHub Actions and handling dynamic card lookup. This was solved by extracting Trello IDs from PR titles and querying the API.
-
